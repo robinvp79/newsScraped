@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<title>Scraper-Homework</title>
+	 <style>
+		.carousel-content {
+				color:black;
+				display:flex;
+				align-items:center;
+		}
+
+		#text-carousel {
+			width: 100%;
+			height: auto;
+			padding: 50px;
+		}
+
+		.modal {
+			text-align: center;
+			padding: 0!important;
+		}
+		.modal:before {
+			content: '';
+			display: inline-block;
+			height: 100%;
+			vertical-align: middle;
+			margin-right: -4px;
+		}
+		.modal-dialog {
+			display: inline-block;
+			text-align: left;
+			vertical-align: middle;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<br>
+		<div id="text-carousel" class="carousel slide" data-ride="carousel" data-interval="false">
+			<!-- Wrapper for slides -->
+			<div class="row">
+				<div class="col-xs-offset-3 col-xs-6">
+					<div class="carousel-inner" id="jobPost">
+						<div class="item active">
+							<div class="carousel-content">
+								<div>
+									<h3>Craiglist Job Scrapper</h3>
+									<h4>Craiglist New Jersey</h4>
+									<a href="/scrape">Click to scrape</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- Controls --> 
+			<a class="left carousel-control" href="#text-carousel" data-slide="prev">
+					<span class="glyphicon glyphicon-chevron-left"></span>
+			</a>
+			<a class="right carousel-control" href="#text-carousel" data-slide="next">
+					<span class="glyphicon glyphicon-chevron-right"></span>
+			</a>
+		</div>
+
+		<hr>
+		<div class="row">
+			<div class="col-md-2 col-md-offset-3">	
+				<button id="scrape" class="btn btn-lg btn-primary"><i class="glyphicon glyphicon-floppy-saved"></i> Scrape</button>
+			</div>
+			<div class="col-md-2 col-md-offset-2">	
+				<!-- Trigger the modal with a button -->
+				<button class="btn btn-lg btn-primary" data-toggle="modal" data-target="#myModal" type="button"><i class="glyphicon glyphicon-pencil"></i> Add Note</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal -->
+		<div id="myModal" class="modal fade" role="dialog">
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Modal Header</h4>
+					</div>
+					<div class="form-group">
+						<textarea class="form-control" id="note" name="note"></textarea>
+					</div>
+					<div class="modal-footer">
+						<div class="row">
+							<div class="col-xs-6 col-xs-offset-3">	
+								<!-- Trigger the modal with a button -->
+								<button id="save" class="btn btn-primary" type="button"><i class="glyphicon glyphicon-floppy-saved"></i> Save</button>
+								<button type="button" class="btn btn-warning" data-dismiss="modal">Cancel</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<br><br>
+		<div class="container table-responsive">
+			<table class="table table-hover table-striped">
+				<thead>
+					<tr>
+	    			</tr>
+				</thead>
+				<tbody id="notes">
+					<tr>
+						<td>If you add a Note to the job posting above it will be shown down here</td>						
+ 					</tr>
+				</tbody>
+			</table>			
+		</div>
+
+	<script src="app.js"></script>
+
+	<script type="text/javascript">
+
+	$('.left').on('click', function(){
+		console.log('.left');
+		$('#notes').empty();
+		var active = $('.item.active').attr('data-id');
+		console.log(active);
+		$.ajax({
+			method: "GET",
+			url: "/JobPostings/" + active,
+		})
+			.done(function(note) {
+				
+				var tr = $('<tr>')
+				tr.append('<td>' + note.title + '</td>');
+				tr.append('<td>' + note.body + '</td>');
+				tr.append('<td><button class="btn btn-sm btn-danger"' +  'data-id="' + active + '"><i class="glyphicon glyphicon-remove"></i> Delete</button></td>');
+				$('#notes').append(tr);
+			})
+	})
+
+	$('#save').on('click', function(){
+		console.log('note => ', $('#note').val());
+		var active = $('.item.active').attr('data-id');
+		$.ajax({
+			method: "POST",
+			url: "/JobPostings/" + active,
+			note: {
+				title: $('#note').val(),
+				body: $('#note').val()
+			}
+		})
+			.done(function(note) {
+				console.log(note);
+			});
+		$('#note').val("");
+	})
+
+	$('#scrape').on('click', function() {
+		$.getJSON('/JobPostings', function(jobPostings) {
+			console.log('/jobPostings');
+			jobPostings.forEach(function(job, i) {
+				console.log(job);
+				var item = $('<div class="item"' + 'data-id="' + job._id + '">' );
+				var car  = $('<div class="carousel-content">');
+				var div  = $('<div>');
+				var h4 = $('<h4>', {
+					text: job.title,
+					css: {'color': '#acb321'}
+				})
+				var a = $('<a>', {
+					text: job.link,
+					href: job.link,
+				}) 		
+				
+				div.append(h4);
+				div.append(a);
+				car.append(div)
+				item.append(car);
+				
+				// $('.carousel-inner').append(item);
+				$('#jobPost').append(item);
+				
+			})
+		})		
+	})
+
+	</script>
+</body>
+</html>
